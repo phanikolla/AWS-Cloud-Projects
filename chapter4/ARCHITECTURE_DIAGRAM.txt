@@ -1,0 +1,116 @@
+================================================================================
+                 CHAPTER 4 - RECIPE SHARING APP ARCHITECTURE
+================================================================================
+
+                                    USERS
+                                      |
+                    __________________|__________________
+                   |                  |                  |
+                   v                  v                  v
+            ┌─────────────┐   ┌──────────────┐   ┌──────────────┐
+            │  CloudFront │   │ API Gateway  │   │   Cognito    │
+            │    (CDN)    │   │   (HTTP)     │   │  User Pool   │
+            └──────┬──────┘   └──────┬───────┘   └──────────────┘
+                   |                 |
+                   v                 |
+            ┌─────────────┐          |
+            │  S3 Bucket  │          |
+            │ (React App) │          |
+            └─────────────┘          |
+                                     |
+                    ┌────────────────┼────────────────┐
+                    |                |                |
+                    v                v                v
+            ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+            │  healthcheck │  │  testauth    │  │ get-recipes  │
+            │ GET /health  │  │  GET /auth   │  │ GET /recipes │
+            │   (No Auth)  │  │  (JWT Auth)  │  │  (No Auth)   │
+            └──────────────┘  └──────────────┘  └──────────────┘
+                    |                |                |
+                    |                |                v
+                    |                |         ┌──────────────┐
+                    |                |         │  DynamoDB    │
+                    |                |         │  recipes     │
+                    |                |         │   table      │
+                    |                |         └──────────────┘
+                    |                |                ^
+                    |                |                |
+            ┌───────┴────────────────┴────────────────┤
+            |                                         |
+            v                                         v
+    ┌──────────────┐                         ┌──────────────┐
+    │ post-recipe  │                         │delete-recipe │
+    │POST /recipes │                         │DELETE /...   │
+    │ (JWT Auth)   │                         │ (JWT Auth)   │
+    └──────────────┘                         └──────────────┘
+            |                                         |
+            └─────────────────┬──────────────────────┘
+                              |
+                              v
+                      ┌──────────────┐
+                      │ like-recipe  │
+                      │PUT /recipes/ │
+                      │like/{id}     │
+                      │ (No Auth)    │
+                      └──────────────┘
+                              |
+                              v
+                      ┌──────────────┐
+                      │  DynamoDB    │
+                      │  recipes     │
+                      │   table      │
+                      └──────────────┘
+
+================================================================================
+                              COMPONENT DETAILS
+================================================================================
+
+FRONTEND LAYER:
+  • S3 Bucket: Hosts React static files (private, CloudFront access only)
+  • CloudFront: CDN distribution with OAI, SPA routing, HTTPS
+
+AUTHENTICATION LAYER:
+  • Cognito User Pool: Email verification, admin-only user creation
+  • JWT Authorizer: Token validation for protected routes
+
+API LAYER:
+  • HTTP API Gateway: CORS enabled, auto-deploy on dev stage
+
+LAMBDA FUNCTIONS (6 total):
+  1. healthcheck    - GET /health (no auth)
+  2. testauth       - GET /auth (JWT required)
+  3. get-recipes    - GET /recipes (no auth)
+  4. post-recipe    - POST /recipes (JWT required)
+  5. delete-recipe  - DELETE /recipes/{id} (JWT required)
+  6. like-recipe    - PUT /recipes/like/{id} (no auth)
+
+DATA LAYER:
+  • DynamoDB Table: recipes (on-demand billing)
+    - Partition Key: id (UUID)
+    - Attributes: title, ingredients[], steps[], likes
+
+IAM PERMISSIONS:
+  • Each Lambda has dedicated execution role
+  • Fine-grained DynamoDB permissions (Scan, Query, GetItem, PutItem, DeleteItem, UpdateItem)
+  • CloudWatch Logs permissions for all Lambdas
+
+================================================================================
+                              DATA FLOW EXAMPLES
+================================================================================
+
+VIEW RECIPES:
+  User → CloudFront → S3 (React) → API Gateway → get-recipes Lambda → DynamoDB
+
+CREATE RECIPE (Authenticated):
+  User (JWT) → API Gateway → post-recipe Lambda → DynamoDB
+
+DELETE RECIPE (Authenticated):
+  User (JWT) → API Gateway → delete-recipe Lambda → DynamoDB
+
+LIKE RECIPE:
+  User → API Gateway → like-recipe Lambda → DynamoDB (increment counter)
+
+AUTHENTICATION:
+  User → Cognito → Email Verification → JWT Token → Protected Routes
+
+================================================================================

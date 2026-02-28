@@ -1,0 +1,197 @@
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                 CHAPTER 3 - RECIPE SHARING APPLICATION                        ║
+║                          ARCHITECTURE DIAGRAM                                 ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+
+                                    ┌─────────────┐
+                                    │   USERS     │
+                                    │  (Browser)  │
+                                    └──────┬──────┘
+                                           │
+                    ┌──────────────────────┼──────────────────────┐
+                    │                      │                      │
+                    │ HTTPS                │ HTTP                 │
+                    ▼                      ▼                      ▼
+            ┌──────────────────┐   ┌──────────────────┐
+            │   CloudFront     │   │   EC2 Instance   │
+            │   Distribution   │   │  (FastAPI)       │
+            └────────┬─────────┘   └────────┬─────────┘
+                     │                      │
+                     ▼                      │
+            ┌──────────────────┐            │
+            │   S3 Bucket      │            │
+            │  (Frontend)      │            │
+            │  - React App     │            │
+            │  - TypeScript    │            │
+            │  - Vite Build    │            │
+            └──────────────────┘            │
+                                            │
+                                            │ Read/Write
+                                            ▼
+                                    ┌──────────────────┐
+                                    │    DynamoDB      │
+                                    │  Recipes Table   │
+                                    │  - id (PK)       │
+                                    │  - title         │
+                                    │  - ingredients   │
+                                    │  - steps         │
+                                    └──────────────────┘
+
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                            DETAILED COMPONENTS                                ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ AWS CLOUD INFRASTRUCTURE                                                    │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌─────────────────────────────────────────────────────────────────────┐  │
+│  │ VPC (10.0.0.0/16)                                                   │  │
+│  │                                                                     │  │
+│  │  ┌──────────────────────────────────────────────────────────────┐  │  │
+│  │  │ Public Subnet (10.0.0.0/24)                                 │  │  │
+│  │  │                                                              │  │  │
+│  │  │  ┌────────────────────────────────────────────────────────┐ │  │  │
+│  │  │  │ EC2 Instance (t3.micro)                               │ │  │  │
+│  │  │  │ - Ubuntu 22.04 LTS                                    │ │  │  │
+│  │  │  │ - FastAPI Backend                                     │ │  │  │
+│  │  │  │ - Nginx Reverse Proxy (Port 80)                       │ │  │  │
+│  │  │  │ - Python 3 + Dependencies                             │ │  │  │
+│  │  │  │ - IAM Role (DynamoDB Access)                          │ │  │  │
+│  │  │  └────────────────────────────────────────────────────────┘ │  │  │
+│  │  │                                                              │  │  │
+│  │  │  Security Group: Allow HTTP (0.0.0.0/0)                     │  │  │
+│  │  └──────────────────────────────────────────────────────────────┘  │  │
+│  │                                                                     │  │
+│  │  Internet Gateway (IGW)                                            │  │
+│  │  Route Table: 0.0.0.0/0 → IGW                                      │  │
+│  └─────────────────────────────────────────────────────────────────────┘  │
+│                                                                             │
+│  ┌─────────────────────────────────────────────────────────────────────┐  │
+│  │ STORAGE & CDN                                                       │  │
+│  │                                                                     │  │
+│  │  S3 Bucket (Private)                                               │  │
+│  │  ├─ Static Website Hosting                                         │  │
+│  │  ├─ Public Access Block: Enabled                                   │  │
+│  │  └─ CloudFront Origin Access Identity                              │  │
+│  │                                                                     │  │
+│  │  CloudFront Distribution                                           │  │
+│  │  ├─ HTTPS (Default Certificate)                                    │  │
+│  │  ├─ Custom Error Response (403 → 200 /index.html)                 │  │
+│  │  ├─ Default Root Object: index.html                                │  │
+│  │  └─ Price Class: PriceClass_100                                    │  │
+│  └─────────────────────────────────────────────────────────────────────┘  │
+│                                                                             │
+│  ┌─────────────────────────────────────────────────────────────────────┐  │
+│  │ DATABASE                                                            │  │
+│  │                                                                     │  │
+│  │  DynamoDB Table: "recipes"                                         │  │
+│  │  ├─ Primary Key: id (String)                                       │  │
+│  │  ├─ Billing Mode: PAY_PER_REQUEST                                  │  │
+│  │  └─ Attributes:                                                    │  │
+│  │     ├─ id: UUID (String)                                           │  │
+│  │     ├─ title: String                                               │  │
+│  │     ├─ ingredients: List[{id, description}]                        │  │
+│  │     └─ steps: List[{id, description}]                              │  │
+│  └─────────────────────────────────────────────────────────────────────┘  │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                            API ENDPOINTS                                      ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+GET /health
+  └─ Returns: {"message": "Service is healthy"}
+
+GET /recipes
+  └─ Returns: List[Recipe]
+  └─ Scans entire DynamoDB table
+
+POST /recipes
+  ├─ Request: Recipe object
+  └─ Creates new recipe with UUID
+  └─ Stores in DynamoDB
+
+DELETE /recipes/{recipe_id}
+  ├─ Parameter: recipe_id (String)
+  └─ Deletes recipe from DynamoDB
+
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                            DATA FLOW                                          ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+1. USER ACCESSES FRONTEND
+   User Browser → HTTPS → CloudFront → S3 Bucket → React App
+
+2. USER CREATES RECIPE
+   React App → HTTP → EC2 (FastAPI) → POST /recipes → DynamoDB
+
+3. USER VIEWS RECIPES
+   React App → HTTP → EC2 (FastAPI) → GET /recipes → DynamoDB Scan
+
+4. USER DELETES RECIPE
+   React App → HTTP → EC2 (FastAPI) → DELETE /recipes/{id} → DynamoDB
+
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                            SECURITY LAYERS                                    ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+✓ IAM Role: EC2 instance has limited DynamoDB permissions
+  ├─ dynamodb:PutItem
+  ├─ dynamodb:Scan
+  └─ dynamodb:DeleteItem
+
+✓ Security Group: Only HTTP (80) allowed from anywhere
+
+✓ S3 Bucket Policy: CloudFront OAI for secure access
+
+✓ Public Access Block: S3 bucket not publicly accessible
+
+✓ CORS: Enabled on FastAPI for cross-origin requests
+
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                            DEPLOYMENT FLOW                                    ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+CloudFormation Stack Creation
+    ↓
+1. Create DynamoDB Table (recipes)
+    ↓
+2. Create IAM Role & Instance Profile
+    ↓
+3. Create VPC, Subnet, IGW, Route Table
+    ↓
+4. Create Security Group (HTTP)
+    ↓
+5. Launch EC2 Instance with UserData Script
+    ├─ Install dependencies (Python, Nginx, Git)
+    ├─ Clone repository
+    ├─ Configure Nginx reverse proxy
+    └─ Start FastAPI application
+    ↓
+6. Create S3 Bucket (Private)
+    ↓
+7. Create CloudFront Distribution
+    ↓
+8. Output URLs for access
+
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                            OUTPUTS                                            ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+CloudFrontDistributionUrl
+  └─ Access frontend: https://<cloudfront-domain>
+
+APIDNSName
+  └─ Access backend: http://<ec2-public-dns>
+
+CloudFrontDistributionId
+  └─ For cache invalidation
