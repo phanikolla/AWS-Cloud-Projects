@@ -21,4 +21,4 @@ Thumbs.db
 *.pdf
 
 # Diagrams (generated)
-chapter3/generated-diagrams/
+recipe-app-three-tier/generated-diagrams/

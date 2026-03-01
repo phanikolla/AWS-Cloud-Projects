@@ -234,12 +234,12 @@ Resources:
               sudo apt update
               sudo apt-get install -y unzip awscli
               git clone ${GitRepoURL}
-              cp -r $(echo "${GitRepoURL}" | sed 's/.*\///' | sed 's/\.git//')/chapter8/code/aux . ; rm -rf $(echo "${GitRepoURL}" | sed 's/.*\///' | sed 's/\.git//') ; cd aux
+              cp -r $(echo "${GitRepoURL}" | sed 's/.*\///' | sed 's/\.git//')/clickstream-analytics/code/auxiliary . ; rm -rf $(echo "${GitRepoURL}" | sed 's/.*\///' | sed 's/\.git//') ; cd auxiliary
               aws s3 cp --recursive  . s3://${S3Bucket}/aux
               aws s3 cp  job.py s3://${S3Bucket}/glue-script/
               aws s3 cp  countries_continents.csv s3://${S3Bucket}/reference/
               echo "git clone ${GitRepoURL}" > instructions.txt
-              echo "cd $(echo "${GitRepoURL}" | sed 's/.*\///' | sed 's/\.git//')/chapter8/code/aux" >> instructions.txt
+              echo "cd $(echo "${GitRepoURL}" | sed 's/.*\///' | sed 's/\.git//')/clickstream-analytics/code/auxiliary" >> instructions.txt
               echo "pip install -r requirements.txt" >> instructions.txt
               aws s3 cp  instructions.txt s3://${S3Bucket}/aux/
               

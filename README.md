@@ -23,14 +23,14 @@ A collection of **8 hands-on AWS projects** that progressively build real-world 
 
 | # | Project | Difficulty | Tech Stack | Key Learning |
 |:-:|:--------|:-----------|:-----------|:-------------|
-| 1 | **[🖥️ EC2 Fundamentals](./chapter1)** | 🟢 Beginner | EC2, CloudFormation, Terraform | Provisioning compute resources with Infrastructure as Code — both CloudFormation (YAML) and Terraform (HCL). |
-| 2 | **[🌐 Professional CV Website](./chapter2)** | 🟢 Beginner | S3, CloudFront | Static website hosting with global CDN distribution, custom styling, and HTTPS. |
-| 3 | **[🍳 Recipe Sharing App (Three-Tier)](./chapter3)** | 🟡 Intermediate | EC2, DynamoDB, S3, CloudFront, VPC, Nginx | Full-stack three-tier architecture — React frontend, FastAPI backend on EC2, DynamoDB database, with VPC networking and IAM security. |
-| 4 | **[🍳 Recipe Sharing App (Serverless)](./chapter4)** | 🟡 Intermediate | API Gateway, Lambda, DynamoDB, Cognito, S3, CloudFront | Serverless re-architecture of the Recipe app — API Gateway HTTP API, Lambda functions, Cognito authentication, and a React frontend. |
-| 5 | **[📸 Photo Friendliness Analyzer](./chapter5)** | 🟡 Intermediate | Lambda, Rekognition, API Gateway, Terraform | AI-powered image analysis using Amazon Rekognition to evaluate photo friendliness for professional profiles. Deployed with Terraform. |
-| 6 | **[🌍 Automated Content Translation Pipeline](./chapter6)** | 🔴 Advanced | CodePipeline, CodeBuild, Lambda@Edge, CloudFront, S3, Terraform | End-to-end CI/CD pipeline that automatically translates website content across languages using Lambda@Edge at the CDN layer. |
-| 7 | **[🤖 AI Q&A Chatbot](./chapter7)** | 🔴 Advanced | Lex, Bedrock, Lambda, Cognito, API Gateway, DynamoDB | Conversational AI chatbot with Amazon Lex and Bedrock LLMs, user authentication via Cognito, and a React chat interface. |
-| 8 | **[📊 Clickstream Analytics Dashboard](./chapter8)** | 🔴 Advanced | Kinesis, Glue, Athena, QuickSight, S3, CloudFormation | Business intelligence application for real-time website clickstream data ingestion, ETL processing, and interactive dashboards. |
+| 1 | **[🖥️ EC2 Fundamentals](./ec2-fundamentals)** | 🟢 Beginner | EC2, CloudFormation, Terraform | Provisioning compute resources with Infrastructure as Code — both CloudFormation (YAML) and Terraform (HCL). |
+| 2 | **[🌐 Professional CV Website](./static-cv-website)** | 🟢 Beginner | S3, CloudFront | Static website hosting with global CDN distribution, custom styling, and HTTPS. |
+| 3 | **[🍳 Recipe Sharing App (Three-Tier)](./recipe-app-three-tier)** | 🟡 Intermediate | EC2, DynamoDB, S3, CloudFront, VPC, Nginx | Full-stack three-tier architecture — React frontend, FastAPI backend on EC2, DynamoDB database, with VPC networking and IAM security. |
+| 4 | **[🍳 Recipe Sharing App (Serverless)](./recipe-app-serverless)** | 🟡 Intermediate | API Gateway, Lambda, DynamoDB, Cognito, S3, CloudFront | Serverless re-architecture of the Recipe app — API Gateway HTTP API, Lambda functions, Cognito authentication, and a React frontend. |
+| 5 | **[📸 Photo Friendliness Analyzer](./photo-friendliness-analyzer)** | 🟡 Intermediate | Lambda, Rekognition, API Gateway, Terraform | AI-powered image analysis using Amazon Rekognition to evaluate photo friendliness for professional profiles. Deployed with Terraform. |
+| 6 | **[🌍 Automated Content Translation Pipeline](./content-translation-pipeline)** | 🔴 Advanced | CodePipeline, CodeBuild, Lambda@Edge, CloudFront, S3, Terraform | End-to-end CI/CD pipeline that automatically translates website content across languages using Lambda@Edge at the CDN layer. |
+| 7 | **[🤖 AI Q&A Chatbot](./ai-chatbot)** | 🔴 Advanced | Lex, Bedrock, Lambda, Cognito, API Gateway, DynamoDB | Conversational AI chatbot with Amazon Lex and Bedrock LLMs, user authentication via Cognito, and a React chat interface. |
+| 8 | **[📊 Clickstream Analytics Dashboard](./clickstream-analytics)** | 🔴 Advanced | Kinesis, Glue, Athena, QuickSight, S3, CloudFormation | Business intelligence application for real-time website clickstream data ingestion, ETL processing, and interactive dashboards. |
 
 ---
 
@@ -65,10 +65,10 @@ Each project follows AWS Well-Architected Framework principles:
 git clone https://github.com/phanikolla/AWS-Cloud-Projects.git
 cd AWS-Cloud-Projects
 
-# Example: Deploy Chapter 3 (Recipe Sharing App)
+# Example: Deploy Recipe Sharing App (Three-Tier)
 aws cloudformation create-stack \
-  --stack-name chapter3-recipe-app \
-  --template-body file://chapter3/code/platform/ch3-http.yaml \
+  --stack-name recipe-app-three-tier \
+  --template-body file://recipe-app-three-tier/code/platform/ch3-http.yaml \
   --capabilities CAPABILITY_IAM \
   --parameters ParameterKey=GitRepoURL,ParameterValue=https://github.com/phanikolla/AWS-Cloud-Projects.git
 ```
@@ -79,19 +79,19 @@ aws cloudformation create-stack \
 
 ```
 AWS-Cloud-Projects/
-├── chapter1/          # EC2 Fundamentals (CloudFormation + Terraform)
-├── chapter2/          # Static CV Website (S3 + CloudFront)
-├── chapter3/          # Three-Tier Recipe App (EC2 + DynamoDB)
+├── ec2-fundamentals/                # EC2 provisioning (CloudFormation + Terraform)
+├── static-cv-website/               # Static CV Website (S3 + CloudFront)
+├── recipe-app-three-tier/           # Three-Tier Recipe App (EC2 + DynamoDB)
 │   ├── code/
-│   │   ├── backend/       # FastAPI REST API
-│   │   ├── frontend/      # React + TypeScript + Vite
-│   │   └── platform/      # CloudFormation templates (HTTP & HTTPS)
-│   └── ARCHITECTURE.md    # Detailed architecture docs
-├── chapter4/          # Serverless Recipe App (API GW + Lambda + Cognito)
-├── chapter5/          # Photo Analyzer (Rekognition + Terraform)
-├── chapter6/          # CI/CD Translation Pipeline (CodePipeline + Lambda@Edge)
-├── chapter7/          # AI Chatbot (Lex + Bedrock + Cognito)
-├── chapter8/          # Clickstream Analytics (Kinesis + Glue + QuickSight)
+│   │   ├── backend/                     # FastAPI REST API
+│   │   ├── frontend/                    # React + TypeScript + Vite
+│   │   └── platform/                    # CloudFormation templates (HTTP & HTTPS)
+│   └── ARCHITECTURE.md                  # Detailed architecture docs
+├── recipe-app-serverless/           # Serverless Recipe App (API GW + Lambda + Cognito)
+├── photo-friendliness-analyzer/     # Photo Analyzer (Rekognition + Terraform)
+├── content-translation-pipeline/    # CI/CD Pipeline (CodePipeline + Lambda@Edge)
+├── ai-chatbot/                      # AI Chatbot (Lex + Bedrock + Cognito)
+├── clickstream-analytics/           # Clickstream Analytics (Kinesis + Glue + QuickSight)
 └── README.md
 ```
 
@@ -103,13 +103,13 @@ Most projects are designed to run within or near the **AWS Free Tier**:
 
 | Project | Primary Cost Drivers | Estimated Monthly Cost |
 |---------|---------------------|----------------------|
-| Chapter 1-2 | EC2 t2.micro, S3, CloudFront | < $1 (Free Tier eligible) |
-| Chapter 3 | EC2 t3.micro, DynamoDB, CloudFront | ~$12 (without Free Tier) |
-| Chapter 4 | Lambda, API Gateway, DynamoDB | < $1 (pay-per-request) |
-| Chapter 5 | Lambda, Rekognition | < $1 (low usage) |
-| Chapter 6 | CodePipeline, Lambda@Edge | ~$2 |
-| Chapter 7 | Lex, Bedrock, Lambda | Usage-based |
-| Chapter 8 | Kinesis, Glue, QuickSight | Usage-based |
+| EC2 Fundamentals / CV Website | EC2 t2.micro, S3, CloudFront | < $1 (Free Tier eligible) |
+| Recipe App (Three-Tier) | EC2 t3.micro, DynamoDB, CloudFront | ~$12 (without Free Tier) |
+| Recipe App (Serverless) | Lambda, API Gateway, DynamoDB | < $1 (pay-per-request) |
+| Photo Analyzer | Lambda, Rekognition | < $1 (low usage) |
+| Translation Pipeline | CodePipeline, Lambda@Edge | ~$2 |
+| AI Chatbot | Lex, Bedrock, Lambda | Usage-based |
+| Clickstream Analytics | Kinesis, Glue, QuickSight | Usage-based |
 
 > ⚠️ **Remember**: Always delete your CloudFormation stacks and Terraform resources when done to avoid unexpected charges.
 
